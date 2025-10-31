@@ -1,6 +1,6 @@
-AR = { name = "AutoRechargeAndRepair" }
+AutoRecharge = { name = "AutoRechargeAndRepair" }
 
-AR.defaults = {
+AutoRecharge.defaults = {
 	debugMessages = true,
 	autoRecharge = true,
 	rechargePercentage = 10,
@@ -14,20 +14,20 @@ AR.defaults = {
 local function attemptCharge(weapon, gem, count)
 	if IsItemChargeable(BAG_WORN, weapon) then
 		local charges, maxCharges = GetChargeInfoForItem(BAG_WORN, weapon)
-		if (charges/maxCharges) < (AR.savedVariables.rechargePercentage/100) then
+		if (charges/maxCharges) < (AutoRecharge.savedVariables.rechargePercentage/100) then
 			if gem == -1 or count == 0 then
-				if AR.savedVariables.debugMessages then AR.chat:Print("Player does not have a filled soul gem to recharge \""..GetItemName(BAG_WORN, weapon).."\"") end
+				if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Player does not have a filled soul gem to recharge \""..GetItemName(BAG_WORN, weapon).."\"") end
 				return count
 			end
 			
 			if IsUnitDead("player") or GetUnitPower("player", COMBAT_MECHANIC_FLAGS_HEALTH) <= 0 then
-				if AR.savedVariables.debugMessages then AR.chat:Print("Cannot recharge item \""..GetItemName(BAG_WORN, weapon).."\" while player is dead!") end
+				if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Cannot recharge item \""..GetItemName(BAG_WORN, weapon).."\" while player is dead!") end
 				return count
 			end
 			
 			ChargeItemWithSoulGem(BAG_WORN, weapon, BAG_BACKPACK, gem)
 			PlaySound(SOUNDS.INVENTORY_ITEM_APPLY_CHARGE)
-			if AR.savedVariables.debugMessages then AR.chat:Print("Item charged: \""..GetItemName(BAG_WORN, weapon).."\"") end
+			if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Item charged: \""..GetItemName(BAG_WORN, weapon).."\"") end
 			return count - 1
 		end
 	end
@@ -37,20 +37,20 @@ end
 local function attemptRepair(armor, kit, count)
 	if DoesItemHaveDurability(BAG_WORN, armor) then
 		local condition = GetItemCondition(BAG_WORN, armor)
-		if condition < AR.savedVariables.repairPercentage then
+		if condition < AutoRecharge.savedVariables.repairPercentage then
 			if kit == -1 or count == 0 then
-				if AR.savedVariables.debugMessages then AR.chat:Print("Player does not have a repair kit to repair \""..GetItemName(BAG_WORN, armor).."\"") end
+				if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Player does not have a repair kit to repair \""..GetItemName(BAG_WORN, armor).."\"") end
 				return count
 			end
 			
 			if IsUnitDead("player") or GetUnitPower("player", COMBAT_MECHANIC_FLAGS_HEALTH) <= 0 then
-				if AR.savedVariables.debugMessages then AR.chat:Print("Cannot repair item \""..GetItemName(BAG_WORN, armor).."\" while player is dead!") end
+				if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Cannot repair item \""..GetItemName(BAG_WORN, armor).."\" while player is dead!") end
 				return count
 			end
 			
 			RepairItemWithRepairKit(BAG_WORN, armor, BAG_BACKPACK, kit)
 			PlaySound(SOUNDS.INVENTORY_ITEM_REPAIR)
-			if AR.savedVariables.debugMessages then AR.chat:Print("Item repaired: \""..GetItemName(BAG_WORN, armor).."\"") end
+			if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Item repaired: \""..GetItemName(BAG_WORN, armor).."\"") end
 			return count - 1
 		end
 	end
@@ -61,11 +61,11 @@ local function delayedCombatChange(event, inCombat)
 	
 	local backpack = SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_BACKPACK) 
 	
-	if AR.savedVariables.autoRecharge then
+	if AutoRecharge.savedVariables.autoRecharge then
 		local soulGemIndex = -1
 		local soulGemCount = 0
 		
-		if AR.savedVariables.preferCrownGem then
+		if AutoRecharge.savedVariables.preferCrownGem then
 			--Crown gems
 			for k, v in pairs(backpack) do
 				if IsItemSoulGem(SOUL_GEM_TYPE_FILLED, BAG_BACKPACK, v.slotIndex) and IsItemFromCrownStore(BAG_BACKPACK, v.slotIndex) then
@@ -113,11 +113,11 @@ local function delayedCombatChange(event, inCombat)
 		soulGemCount = attemptCharge(EQUIP_SLOT_BACKUP_OFF, soulGemIndex, soulGemCount)
 	end
 	
-	if AR.savedVariables.autoRepair then
+	if AutoRecharge.savedVariables.autoRepair then
 		local repairKitIndex = -1
 		local repairKitCount = 0
 		
-		if AR.savedVariables.useCrownRepair == false then
+		if AutoRecharge.savedVariables.useCrownRepair == false then
 			for k, v in pairs(backpack) do
 				if  IsItemRepairKit(BAG_BACKPACK, v.slotIndex) and
 					IsItemNonCrownRepairKit(BAG_BACKPACK, v.slotIndex) and 
@@ -150,23 +150,23 @@ local function delayedCombatChange(event, inCombat)
 			end
 			
 			
-			if GetItemCondition(BAG_WORN, EQUIP_SLOT_CHEST) < AR.savedVariables.repairPercentage or
-				GetItemCondition(BAG_WORN, EQUIP_SLOT_FEET) < AR.savedVariables.repairPercentage or
-				GetItemCondition(BAG_WORN, EQUIP_SLOT_HAND) < AR.savedVariables.repairPercentage or
-				GetItemCondition(BAG_WORN, EQUIP_SLOT_HEAD) < AR.savedVariables.repairPercentage or
-				GetItemCondition(BAG_WORN, EQUIP_SLOT_LEGS) < AR.savedVariables.repairPercentage or
-				GetItemCondition(BAG_WORN, EQUIP_SLOT_SHOULDERS) < AR.savedVariables.repairPercentage or
-				GetItemCondition(BAG_WORN, EQUIP_SLOT_WAIST) < AR.savedVariables.repairPercentage or
-				(DoesItemHaveDurability(BAG_WORN, EQUIP_SLOT_BACKUP_OFF) and GetItemCondition(BAG_WORN, EQUIP_SLOT_BACKUP_OFF) < AR.savedVariables.repairPercentage) or
-				(DoesItemHaveDurability(BAG_WORN, EQUIP_SLOT_OFF_HAND) and GetItemCondition(BAG_WORN, EQUIP_SLOT_OFF_HAND) < AR.savedVariables.repairPercentage) 
+			if GetItemCondition(BAG_WORN, EQUIP_SLOT_CHEST) < AutoRecharge.savedVariables.repairPercentage or
+				GetItemCondition(BAG_WORN, EQUIP_SLOT_FEET) < AutoRecharge.savedVariables.repairPercentage or
+				GetItemCondition(BAG_WORN, EQUIP_SLOT_HAND) < AutoRecharge.savedVariables.repairPercentage or
+				GetItemCondition(BAG_WORN, EQUIP_SLOT_HEAD) < AutoRecharge.savedVariables.repairPercentage or
+				GetItemCondition(BAG_WORN, EQUIP_SLOT_LEGS) < AutoRecharge.savedVariables.repairPercentage or
+				GetItemCondition(BAG_WORN, EQUIP_SLOT_SHOULDERS) < AutoRecharge.savedVariables.repairPercentage or
+				GetItemCondition(BAG_WORN, EQUIP_SLOT_WAIST) < AutoRecharge.savedVariables.repairPercentage or
+				(DoesItemHaveDurability(BAG_WORN, EQUIP_SLOT_BACKUP_OFF) and GetItemCondition(BAG_WORN, EQUIP_SLOT_BACKUP_OFF) < AutoRecharge.savedVariables.repairPercentage) or
+				(DoesItemHaveDurability(BAG_WORN, EQUIP_SLOT_OFF_HAND) and GetItemCondition(BAG_WORN, EQUIP_SLOT_OFF_HAND) < AutoRecharge.savedVariables.repairPercentage) 
 			then
 					
 					if inCombat == false then
 						if repairKitIndex == -1 then
-							if AR.savedVariables.debugMessages then AR.chat:Print("Player does not have any crown repair kits to repair armor!") end
+							if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Player does not have any crown repair kits to repair armor!") end
 						else
 							if IsUnitDead("player") or GetUnitPower("player", COMBAT_MECHANIC_FLAGS_HEALTH) <= 0 then
-								if AR.savedVariables.debugMessages then AR.chat:Print("Cannot use crown repair kits while player is dead!") end
+								if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Cannot use crown repair kits while player is dead!") end
 								return
 							end
 								
@@ -174,9 +174,9 @@ local function delayedCombatChange(event, inCombat)
 							
 							if isSuccess == true then 
 								PlaySound(SOUNDS.INVENTORY_ITEM_REPAIR)
-								if AR.savedVariables.debugMessages then AR.chat:Print("Armor repaired with crown repair kit!") end
+								if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Armor repaired with crown repair kit!") end
 							else
-								if AR.savedVariables.debugMessages then AR.chat:Print("Crown Repair Failed. Player is in combat") end
+								if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("Crown Repair Failed. Player is in combat") end
 							end
 						end
 					end
@@ -186,7 +186,7 @@ local function delayedCombatChange(event, inCombat)
 	end
 end
 
-function AR.ChangePlayerCombatState(event, inCombat)
+function AutoRecharge.ChangePlayerCombatState(event, inCombat)
 	--call a function that calls the above function after 2 seconds.
 	--IsUnitDead is slow so I'm waiting for it.
 
@@ -198,8 +198,8 @@ function AR.ChangePlayerCombatState(event, inCombat)
 		end, 1000)
 end
 
-function AR.merchantRepair(eventCode)
-	if AR.savedVariables.autoMerchant and CanStoreRepair() and GetRepairAllCost() > 0 then
+function AutoRecharge.merchantRepair(eventCode)
+	if AutoRecharge.savedVariables.autoMerchant and CanStoreRepair() and GetRepairAllCost() > 0 then
 		local backpack = SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_BACKPACK) 
 		local equips = SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_WORN)
 		
@@ -231,17 +231,17 @@ function AR.merchantRepair(eventCode)
 				RepairItem(BAG_WORN, v)
 			end
 			
-			if AR.savedVariables.debugMessages then AR.chat:Print("You spent "..cost.." gold to repair your gear.") end
+			if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("You spent "..cost.." gold to repair your gear.") end
 		else
-			if AR.savedVariables.debugMessages then AR.chat:Print("You couldn't afford "..cost.." gold to repair your gear.") end
+			if AutoRecharge.savedVariables.debugMessages then AutoRecharge.chat:Print("You couldn't afford "..cost.." gold to repair your gear.") end
 		end
 	end
 end
 
-function AR.Initialize()
-	AR.savedVariables = ZO_SavedVars:NewAccountWide("ARSavedVariables", 1, nil, AR.defaults, GetWorldName())
+function AutoRecharge.Initialize()
+	AutoRecharge.savedVariables = ZO_SavedVars:NewAccountWide("ARSavedVariables", 1, nil, AutoRecharge.defaults, GetWorldName())
 	
-	AR.chat = LibChatMessage("AutoRechargeAndRepair", "AR") 
+	AutoRecharge.chat = LibChatMessage("AutoRechargeAndRepair", "AR") 
 	LibChatMessage:SetTagPrefixMode(1)
 	
 	--settings
@@ -259,17 +259,17 @@ function AR.Initialize()
         tooltip = "",
         buttonText = "RESET",
         clickHandler = function(control, button)
-			AR.savedVariables.debugMessages = AR.defaults.debugMessages
+			AutoRecharge.savedVariables.debugMessages = AutoRecharge.defaults.debugMessages
 			
-			AR.savedVariables.autoRecharge = AR.defaults.autoRecharge
-			AR.savedVariables.autoRepair = AR.defaults.autoRepair
-			AR.savedVariables.autoMerchant = AR.defaults.autoMerchant
+			AutoRecharge.savedVariables.autoRecharge = AutoRecharge.defaults.autoRecharge
+			AutoRecharge.savedVariables.autoRepair = AutoRecharge.defaults.autoRepair
+			AutoRecharge.savedVariables.autoMerchant = AutoRecharge.defaults.autoMerchant
 			
-			AR.savedVariables.rechargePercentage = AR.defaults.rechargePercentage
-			AR.savedVariables.repairPercentage = AR.defaults.repairPercentage
+			AutoRecharge.savedVariables.rechargePercentage = AutoRecharge.defaults.rechargePercentage
+			AutoRecharge.savedVariables.repairPercentage = AutoRecharge.defaults.repairPercentage
 			
-			AR.savedVariables.preferCrownGem = AR.defaults.preferCrownGem
-			AR.savedVariables.useCrownRepair = AR.defaults.useCrownRepair
+			AutoRecharge.savedVariables.preferCrownGem = AutoRecharge.defaults.preferCrownGem
+			AutoRecharge.savedVariables.useCrownRepair = AutoRecharge.defaults.useCrownRepair
 		end,
         disable = function() return areSettingsDisabled end,
     }
@@ -278,12 +278,12 @@ function AR.Initialize()
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Toggle Debug Messages", 
         tooltip = "Enabling this will create chat messages notifying you when the addon recharges or repairs on your behalf.",
-        default = AR.defaults.debugMessages,
+        default = AutoRecharge.defaults.debugMessages,
         setFunction = function(state) 
-            AR.savedVariables.debugMessages = state
+            AutoRecharge.savedVariables.debugMessages = state
         end,
         getFunction = function() 
-            return AR.savedVariables.debugMessages
+            return AutoRecharge.savedVariables.debugMessages
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -292,12 +292,12 @@ function AR.Initialize()
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Toggle Auto Recharge", 
         tooltip = "Automatically recharge your weapons when you enter/exit combat",
-        default = AR.savedVariables.autoRecharge,
+        default = AutoRecharge.savedVariables.autoRecharge,
         setFunction = function(state) 
-            AR.savedVariables.autoRecharge = state
+            AutoRecharge.savedVariables.autoRecharge = state
         end,
         getFunction = function() 
-            return AR.savedVariables.autoRecharge
+            return AutoRecharge.savedVariables.autoRecharge
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -307,13 +307,13 @@ function AR.Initialize()
         label = "Recharge Percentage",
         tooltip = "Weapons will be recharged when they drop below this percentage of charge.",
         setFunction = function(value)
-			AR.savedVariables.rechargePercentage = value
+			AutoRecharge.savedVariables.rechargePercentage = value
 			
 			 end,
         getFunction = function()
-            return AR.savedVariables.rechargePercentage
+            return AutoRecharge.savedVariables.rechargePercentage
         end,
-        default = AR.defaults.rechargePercentage,
+        default = AutoRecharge.defaults.rechargePercentage,
         min = 1,
         max = 100,
         step = 1,
@@ -326,12 +326,12 @@ function AR.Initialize()
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Prefer Crown Gems", 
         tooltip = "Change whether the addon will search for crown soul gems or regular soul gems first.",
-        default = AR.savedVariables.preferCrownGem,
+        default = AutoRecharge.savedVariables.preferCrownGem,
         setFunction = function(state) 
-            AR.savedVariables.preferCrownGem = state
+            AutoRecharge.savedVariables.preferCrownGem = state
         end,
         getFunction = function() 
-            return AR.savedVariables.preferCrownGem
+            return AutoRecharge.savedVariables.preferCrownGem
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -340,12 +340,12 @@ function AR.Initialize()
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Toggle Auto Merchant Repair", 
         tooltip = "Automatically spends gold to repair your gear when you talk to a merchant.",
-        default = AR.savedVariables.autoMerchant,
+        default = AutoRecharge.savedVariables.autoMerchant,
         setFunction = function(state) 
-            AR.savedVariables.autoMerchant = state
+            AutoRecharge.savedVariables.autoMerchant = state
         end,
         getFunction = function() 
-            return AR.savedVariables.autoMerchant
+            return AutoRecharge.savedVariables.autoMerchant
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -354,12 +354,12 @@ function AR.Initialize()
         type = LibHarvensAddonSettings.ST_CHECKBOX, --setting type
         label = "Toggle Auto Repair", 
         tooltip = "Automatically repairs your armor as you enter/exit combat",
-        default = AR.savedVariables.autoRepair,
+        default = AutoRecharge.savedVariables.autoRepair,
         setFunction = function(state) 
-            AR.savedVariables.autoRepair = state
+            AutoRecharge.savedVariables.autoRepair = state
         end,
         getFunction = function() 
-            return AR.savedVariables.autoRepair
+            return AutoRecharge.savedVariables.autoRepair
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -369,13 +369,13 @@ function AR.Initialize()
         label = "Repair Percentage",
         tooltip = "Armor will be repaired when they drop below this percentage of durability",
         setFunction = function(value)
-			AR.savedVariables.repairPercentage = value
+			AutoRecharge.savedVariables.repairPercentage = value
 			
 			 end,
         getFunction = function()
-            return AR.savedVariables.repairPercentage
+            return AutoRecharge.savedVariables.repairPercentage
         end,
-        default = AR.defaults.repairPercentage,
+        default = AutoRecharge.defaults.repairPercentage,
         min = 1,
         max = 100,
         step = 1,
@@ -389,12 +389,12 @@ function AR.Initialize()
         label = "Use Crown Repair Kits", 
         tooltip = "Toggle whether this addon will try to repair with regular repair kits or crown repair kits.\n\n"..
 		"Note: Crown armor repair kit checks can only occur as you exit combat, not as you enter it.",
-        default = AR.savedVariables.useCrownRepair,
+        default = AutoRecharge.savedVariables.useCrownRepair,
         setFunction = function(state) 
-            AR.savedVariables.useCrownRepair = state
+            AutoRecharge.savedVariables.useCrownRepair = state
         end,
         getFunction = function() 
-            return AR.savedVariables.useCrownRepair
+            return AutoRecharge.savedVariables.useCrownRepair
         end,
         disable = function() return areSettingsDisabled end,
     }
@@ -404,16 +404,16 @@ function AR.Initialize()
 	settings:AddSettings({rechargeSection, toggle_recharge, slider_recharge, useCrownGem})
 	settings:AddSettings({repairSection, toggle_merchant, toggle_repair, slider_repair, useCrownRepair})
 	
-	EVENT_MANAGER:RegisterForEvent(AR.name, EVENT_PLAYER_COMBAT_STATE, AR.ChangePlayerCombatState)
-	EVENT_MANAGER:RegisterForEvent(AR.name, EVENT_PLAYER_ALIVE, AR.ChangePlayerCombatState)
-	EVENT_MANAGER:RegisterForEvent(AR.name, EVENT_OPEN_STORE, AR.merchantRepair)
+	EVENT_MANAGER:RegisterForEvent(AutoRecharge.name, EVENT_PLAYER_COMBAT_STATE, AutoRecharge.ChangePlayerCombatState)
+	EVENT_MANAGER:RegisterForEvent(AutoRecharge.name, EVENT_PLAYER_ALIVE, AutoRecharge.ChangePlayerCombatState)
+	EVENT_MANAGER:RegisterForEvent(AutoRecharge.name, EVENT_OPEN_STORE, AutoRecharge.merchantRepair)
 end
 	
-function AR.OnAddOnLoaded(event, addonName)
-	if addonName == AR.name then
-		AR.Initialize()
-		EVENT_MANAGER:UnregisterForEvent(AR.name, EVENT_ADD_ON_LOADED)
+function AutoRecharge.OnAddOnLoaded(event, addonName)
+	if addonName == AutoRecharge.name then
+		AutoRecharge.Initialize()
+		EVENT_MANAGER:UnregisterForEvent(AutoRecharge.name, EVENT_ADD_ON_LOADED)
 	end
 end
 
-EVENT_MANAGER:RegisterForEvent(AR.name, EVENT_ADD_ON_LOADED, AR.OnAddOnLoaded)
+EVENT_MANAGER:RegisterForEvent(AutoRecharge.name, EVENT_ADD_ON_LOADED, AutoRecharge.OnAddOnLoaded)
